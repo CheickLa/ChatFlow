@@ -12,8 +12,24 @@ model User {
   username   String    @db.VarChar(65)
   email      String    @db.VarChar(255) @unique
   password   String    @db.VarChar(255)
+  color      String    @default("#3B82F6") @db.VarChar(7) // Couleur hex par défaut
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
+  
+  // Relation avec les messages
+  messages   Message[]
+}
+
+model Message {
+  messageId  Int      @id @default(autoincrement())
+  content    String   @db.Text
+  createdAt  DateTime @default(now())
+  
+  // Relation avec l'utilisateur
+  userId     Int
+  user       User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  
+  @@map("messages")
 }
 
 
