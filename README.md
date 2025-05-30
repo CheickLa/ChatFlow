@@ -7,8 +7,8 @@ Application de chat en temps réel avec authentification et personalisation d'un
 ## 🛠️ Installation du projet
 Ce projet est composé de deux parties :
 
-Backend (NestJS) -> Prisma + Postgres 
-Frontend (Next.js) -> TailwindCss
+Backend (NestJS) 
+Frontend (Next.js)
 
 Assurez-vous d’avoir Node.js et Postgres installés sur votre machine.
 
