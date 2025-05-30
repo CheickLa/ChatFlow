@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import socketService, { User, Message } from '../lib/socket';
 import ColorPickerModal from './ColorPickerModal';
+import Logout from './Logout';
 
 interface ChatProps {
   token: string;
@@ -264,17 +265,10 @@ export default function Chat({ token, user }: ChatProps) {
               className=" w-12 h-12 rounded-full border-4 border-white shadow-lg"
               title="Changer ma couleur"
             />
+            <Logout />
           </div>
         </form>
       </div>
-
-      {/* Bouton pour ouvrir le color picker */}
-      <button
-        onClick={() => setShowColorPicker(true)}
-        style={{ backgroundColor: userColor }}
-        className="fixed bottom-6 left-6 w-12 h-12 rounded-full border-4 border-white shadow-lg"
-        title="Changer ma couleur"
-      />
     </div>
   );
 }
