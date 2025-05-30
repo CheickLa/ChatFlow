@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import socketService, { User, Message } from '../lib/socket';
+import ColorPickerModal from './ColorPickerModal'; // ajuste le chemin si besoin
 
 interface ChatProps {
   token: string;
@@ -15,49 +16,41 @@ export default function Chat({ token, user }: ChatProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [userColor, setUserColor] = useState(user.color  ?? '#000000');
 
   useEffect(() => {
-    // Connexion au socket
     const socket = socketService.connect(token);
 
-    // Écouter l'historique des messages
     socket.on('messageHistory', (history: Message[]) => {
       setMessages(history);
     });
 
-    // Écouter les nouveaux messages
     socket.on('newMessage', (message: Message) => {
       setMessages(prev => [...prev, message]);
     });
 
-    // Écouter le chargement de messages supplémentaires
     socket.on('moreMessages', (olderMessages: Message[]) => {
       setMessages(prev => [...olderMessages, ...prev]);
       setIsLoadingMore(false);
     });
 
-    // Écouter les erreurs de message
     socket.on('messageError', (error: string) => {
       console.error('Erreur message:', error);
-      // Vous pouvez afficher une notification d'erreur ici
     });
 
-    // Écouter les utilisateurs connectés
     socket.on('connectedUsers', (users: User[]) => {
       setConnectedUsers(users);
     });
 
-    // Écouter les nouveaux utilisateurs
     socket.on('userJoined', (user: User) => {
       setConnectedUsers(prev => [...prev, user]);
     });
 
-    // Écouter les utilisateurs qui partent
     socket.on('userLeft', (user: User) => {
       setConnectedUsers(prev => prev.filter(u => u.userId !== user.userId));
     });
 
-    // Écouter les indicateurs de frappe
     socket.on('userTyping', ({ user, isTyping }: { user: User; isTyping: boolean }) => {
       setTypingUsers(prev => {
         if (isTyping) {
@@ -68,25 +61,21 @@ export default function Chat({ token, user }: ChatProps) {
       });
     });
 
-    // Nettoyage
     return () => {
       socketService.disconnect();
     };
   }, [token]);
 
-  // Auto-scroll vers le bas pour les nouveaux messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const loadMoreMessages = (): void => {
     if (messages.length === 0 || isLoadingMore) return;
-    
+
     setIsLoadingMore(true);
     const oldestMessage = messages[0];
-    socketService.emit('loadMoreMessages', { 
-      before: oldestMessage.createdAt 
-    });
+    socketService.emit('loadMoreMessages', { before: oldestMessage.createdAt });
   };
 
   const sendMessage = (e: React.FormEvent): void => {
@@ -94,19 +83,13 @@ export default function Chat({ token, user }: ChatProps) {
     if (newMessage.trim()) {
       socketService.emit('sendMessage', { content: newMessage });
       setNewMessage('');
-      
-      // Arrêter l'indicateur de frappe
       socketService.emit('typing', { isTyping: false });
     }
   };
 
   const handleTyping = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setNewMessage(e.target.value);
-    
-    // Envoyer l'indicateur de frappe
     socketService.emit('typing', { isTyping: true });
-    
-    // Arrêter l'indicateur après 2 secondes d'inactivité
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
@@ -115,32 +98,79 @@ export default function Chat({ token, user }: ChatProps) {
     }, 2000);
   };
 
+  const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Sidebar utilisateurs connectés */}
+    <div className="flex h-screen bg-gray-100 relative">
+      {/* Modal color picker */}
+      {showColorPicker && (
+        <ColorPickerModal
+          initialColor={userColor}
+          onClose={() => setShowColorPicker(false)}
+          onSave={async (newColor: string) => {
+            try {
+              const res = await fetch(`${API_URL}/users/color`, {
+                method: 'PATCH',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ color: newColor }),
+              });
+
+              if (!res.ok) throw new Error('Erreur lors de la mise à jour de la couleur');
+
+              const updatedUser = await res.json();
+
+              setUserColor(updatedUser.color);
+              setShowColorPicker(false);
+
+              // Mise à jour des utilisateurs connectés
+              setConnectedUsers(users =>
+                users.map(u =>
+                  u.userId === user.userId ? { ...u, color: updatedUser.color } : u
+                )
+              );
+
+              // Mise à jour des messages
+              setMessages(msgs =>
+                msgs.map(m =>
+                  m.user.userId === user.userId
+                    ? { ...m, user: { ...m.user, color: updatedUser.color } }
+                    : m
+                )
+              );
+            } catch (err) {
+              alert('Impossible de changer la couleur. Réessayez plus tard.');
+              console.error(err);
+            }
+          }}
+        />
+      )}
+
+      {/* Sidebar des utilisateurs */}
       <div className="w-64 bg-white border-r border-gray-200 p-4">
         <h3 className="text-lg font-semibold mb-4">Utilisateurs connectés</h3>
         <ul className="space-y-2">
           {connectedUsers.map(user => (
             <li key={user.userId} className="flex items-center space-x-2">
-              <div 
+              <div
                 className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: user.color }}
               ></div>
               <span className="text-sm">{user.username}</span>
             </li>
           ))}
-        </ul>
+        </ul>        
       </div>
 
       {/* Zone de chat */}
       <div className="flex-1 flex flex-col">
         {/* Messages */}
-        <div 
+        <div
           ref={messagesContainerRef}
           className="flex-1 overflow-y-auto p-4 space-y-4"
         >
-          {/* Bouton pour charger plus de messages */}
           {messages.length > 0 && (
             <button
               onClick={loadMoreMessages}
@@ -151,35 +181,63 @@ export default function Chat({ token, user }: ChatProps) {
             </button>
           )}
 
-          {messages.map(message => (
-            <div key={message.messageId} className="flex items-start space-x-3">
-              <div 
-                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                style={{ backgroundColor: message.user.color }}
+          {messages.map(message => {
+            const isOwnMessage = message.user.userId === user.userId;
+
+            return (
+              <div
+                key={message.messageId}
+                className={`flex items-start space-x-3 ${
+                  isOwnMessage ? 'justify-end' : ''
+                }`}
               >
-                {message.user.username.charAt(0).toUpperCase()}
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center space-x-2 mb-1">
-                  <span className="font-semibold text-sm">{message.user.username}</span>
-                  <span className="text-xs text-gray-500">
-                    {new Date(message.createdAt).toLocaleTimeString()}
-                  </span>
+                {!isOwnMessage && (
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                    style={{ backgroundColor: message.user.color }}
+                  >
+                    {message.user.username.charAt(0).toUpperCase()}
+                  </div>
+                )}
+
+                <div className={`flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'}`}>
+                  <div className="flex items-center space-x-2 mb-1">
+                    {!isOwnMessage && (
+                      <span className="font-semibold text-sm">{message.user.username}</span>
+                    )}
+                    <span className="text-xs text-gray-500">
+                      {new Date(message.createdAt).toLocaleTimeString()}
+                    </span>
+                  </div>
+                  <p
+                    className={`text-sm rounded-lg px-3 py-2 shadow-sm max-w-xs ${
+                      isOwnMessage
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-white text-gray-800'
+                    }`}
+                  >
+                    {message.content}
+                  </p>
                 </div>
-                <p className="text-sm bg-white rounded-lg px-3 py-2 shadow-sm">
-                  {message.content}
-                </p>
+
+                {isOwnMessage && (
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                    style={{ backgroundColor: message.user.color }}
+                  >
+                    {message.user.username.charAt(0).toUpperCase()}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
-          
-          {/* Indicateur de frappe */}
+            );
+          })}
+
           {typingUsers.length > 0 && (
             <div className="text-sm text-gray-500 italic">
               {typingUsers.join(', ')} {typingUsers.length === 1 ? 'tape' : 'tapent'}...
             </div>
           )}
-          
+
           <div ref={messagesEndRef} />
         </div>
 
@@ -199,9 +257,25 @@ export default function Chat({ token, user }: ChatProps) {
             >
               Envoyer
             </button>
+            
+            {/* Bouton pour changer la couleur */}
+            <button
+              onClick={() => setShowColorPicker(true)}
+              style={{ backgroundColor: userColor }}
+              className=" w-12 h-12 rounded-full border-4 border-white shadow-lg"
+              title="Changer ma couleur"
+            />
           </div>
         </form>
       </div>
+
+      {/* Bouton pour ouvrir le color picker */}
+      <button
+        onClick={() => setShowColorPicker(true)}
+        style={{ backgroundColor: userColor }}
+        className="fixed bottom-6 left-6 w-12 h-12 rounded-full border-4 border-white shadow-lg"
+        title="Changer ma couleur"
+      />
     </div>
   );
 }
