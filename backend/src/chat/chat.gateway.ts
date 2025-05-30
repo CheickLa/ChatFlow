@@ -143,7 +143,7 @@ import { ConfigService } from '@nestjs/config';
           createdAt: savedMessage.createdAt,
         };
   
-        // Diffuse le message à tous les clients connectés
+        // Diffuser le message à tous les clients connectés
         this.server.emit('newMessage', message);
   
       } catch (error) {

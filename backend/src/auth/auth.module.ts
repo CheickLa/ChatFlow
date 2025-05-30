@@ -11,12 +11,12 @@ import { PrismaModule } from '../prisma/prisma.module';
 @Module({
   imports: [
     PassportModule,
-    JwtModule.register({}), // Configuration déjà dans votre AuthService
+    JwtModule.register({}), 
     ConfigModule,
-    PrismaModule, // Pour accéder à PrismaService dans JwtStrategy
+    PrismaModule, 
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, JwtAuthGuard],
-  exports: [AuthService, JwtAuthGuard], // Exporter pour utilisation dans d'autres modules
+  exports: [AuthService, JwtAuthGuard],
 })
 export class AuthModule {}

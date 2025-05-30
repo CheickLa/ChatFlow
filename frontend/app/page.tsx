@@ -69,7 +69,6 @@ export default function ChatPage() {
     }
   }, [isMounted, router]);
 
-  // Afficher un loader tant que le composant n'est pas monté ou en cours de chargement
   if (!isMounted || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -79,7 +78,7 @@ export default function ChatPage() {
   }
 
   if (!user || !token) {
-    return null; // La redirection est en cours
+    return null;
   }
 
   return <Chat token={token} user={user} />;
