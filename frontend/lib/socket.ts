@@ -32,13 +32,14 @@ interface ClientToServerEvents {
 
 class SocketService {
   private socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
+  private URL_BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
   connect(token: string): Socket<ServerToClientEvents, ClientToServerEvents> {
     if (this.socket?.connected) {
       return this.socket;
     }
 
-    this.socket = io('http://localhost:3000', { // Port de votre backend
+    this.socket = io(this.URL_BACKEND, {
       auth: {
         token: token
       },
