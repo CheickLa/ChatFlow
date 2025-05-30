@@ -11,6 +11,7 @@ import {
   import { JwtService } from '@nestjs/jwt';
   import { Logger } from '@nestjs/common';
   import { PrismaService } from '../prisma/prisma.service';
+import { ConfigService } from '@nestjs/config';
   
   interface User {
     userId: number;
@@ -24,10 +25,11 @@ import {
     content: string;
     createdAt: Date;
   }
-  
+
+  const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
   @WebSocketGateway({
     cors: {
-      origin: 'http://localhost:3001', // URL de votre frontend
+      origin: FRONTEND_URL,
       credentials: true,
     },
   })
@@ -41,6 +43,7 @@ import {
     constructor(
       private jwtService: JwtService,
       private prisma: PrismaService,
+      private configService: ConfigService
     ) {}
   
     async handleConnection(client: Socket) {
@@ -54,9 +57,8 @@ import {
         }
   
         // Vérifier le JWT
-        const payload = this.jwtService.verify(token);
+        const payload = this.jwtService.verify(token, { secret: this.configService.get('SECRET_KEY') });
         
-        // Récupérer les données utilisateur depuis la DB
         const user = await this.prisma.user.findUnique({
           where: { userId: payload.sub },
           select: {
@@ -117,7 +119,7 @@ import {
       }
   
       try {
-        // Sauvegarder le message en base de données
+        // Stockage du message dans la base de données
         const savedMessage = await this.prisma.message.create({
           data: {
             content: data.content.trim(),
@@ -141,7 +143,7 @@ import {
           createdAt: savedMessage.createdAt,
         };
   
-        // Diffuser le message à tous les clients connectés
+        // Diffuse le message à tous les clients connectés
         this.server.emit('newMessage', message);
   
       } catch (error) {
