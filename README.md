@@ -1,31 +1,23 @@
 # ChatFlow
-Application de chat en temps réel avec authentification et profils personnalisés - NestJS &amp; Next.js
+Application de chat en temps réel avec authentification et gestion d ela couleur de l'avatar - NestJS &amp; Next.js
 
-🛠️ Installation du projet
-
+## 🛠️ Installation du projet
 Ce projet est composé de deux parties :
 
-Backend (NestJS)
-
-Frontend (Next.js)
+Backend (NestJS) -> Prisma + Postgres 
+Frontend (Next.js) -> TailwindCss
 
 Assurez-vous d’avoir Node.js et Postgres installés sur votre machine.
 
-⚙️ 1️⃣ Clonage du dépôt
-
-git clone <URL_DU_DEPOT>
-cd <NOM_DU_DEPOT>
-
-📦 2️⃣ Configuration des environnements
-
-🟦 Backend
+## 📦 2️⃣ Configuration des environnements
+#🟦 Backend
 
 Dans le dossier /backend :
 
-1️⃣ Crée un fichier .env (ou renomme .env.example si existant) :
+1️⃣ Crée un fichier .env :
 
-DATABASE_URL="postgresql://root:root@localhost:5432/mydb?schema=public"
-SECRET_KEY=""
+DATABASE_URL="url-bdd-postgres"
+SECRET_KEY="secret-key"
 FRONTEND_URL="http://localhost:3000"
 JWT_SECRET="QkuVfg6SgZwo7uL5x+SuvxDNq4nZVrtVTRpNQ+Fhid4="
 
@@ -35,7 +27,7 @@ openssl rand -base64 32
 
 Cela génère une clé sécurisée à coller dans JWT_SECRET.
 
-🟦 Frontend
+#🟦 Frontend
 
 Dans le dossier /frontend :
 
@@ -43,7 +35,7 @@ Dans le dossier /frontend :
 
 NEXT_PUBLIC_BACK_URL=http://localhost:3001
 
-🗄️ 3️⃣ Préparation de la base de données
+## 🗄️ 3️⃣ Préparation de la base de données
 
 Dans le dossier backend, exécute :
 
@@ -69,11 +61,3 @@ npm install
 npm run dev
 
 L’application Next.js sera disponible sur http://localhost:3000.
-
-🔐 Générer un JWT_SECRET si besoin
-
-Si tu n’as pas de clé JWT_SECRET, génère-la avec :
-
-openssl rand -base64 32
-
-Puis copie-la dans ton .env :
