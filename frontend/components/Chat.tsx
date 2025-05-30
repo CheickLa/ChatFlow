@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import socketService, { User, Message } from '../lib/socket';
-import ColorPickerModal from './ColorPickerModal'; // ajuste le chemin si besoin
+import ColorPickerModal from './ColorPickerModal';
 
 interface ChatProps {
   token: string;
@@ -257,7 +257,6 @@ export default function Chat({ token, user }: ChatProps) {
             >
               Envoyer
             </button>
-            
             {/* Bouton pour changer la couleur */}
             <button
               onClick={() => setShowColorPicker(true)}
