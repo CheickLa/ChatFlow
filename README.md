@@ -1,6 +1,9 @@
 # ChatFlow
 Application de chat en temps réel avec authentification et gestion d ela couleur de l'avatar - NestJS &amp; Next.js
 
+<img width="1677" alt="Capture d’écran 2025-05-30 à 14 45 37" src="https://github.com/user-attachments/assets/91d27128-db2b-4092-bbaf-f1379feba683" />
+
+
 ## 🛠️ Installation du projet
 Ce projet est composé de deux parties :
 
