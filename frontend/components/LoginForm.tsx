@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 
 export default function LoginForm() {
   const router = useRouter();
-  const [formData, setFormData] = useState({ username: '', password: '' });
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -18,7 +18,7 @@ export default function LoginForm() {
     e.preventDefault();
 
     try {
-      const res = await fetch(`${API_URL}/auth/signup`, {
+      const res = await fetch(`${API_URL}/auth/signin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -42,11 +42,11 @@ export default function LoginForm() {
       {error && <p className="text-red-500 text-sm">{error}</p>}
 
       <input
-        type="text"
-        name="username"
-        value={formData.username}
+        type="email"
+        name="email"
+        value={formData.email}
         onChange={handleChange}
-        placeholder="Nom d'utilisateur"
+        placeholder="Email"
         className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
         required
       />
